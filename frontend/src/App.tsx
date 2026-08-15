@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 
 import Header from './components/Header';
-import TortoiseMascot from './components/TortoiseMascot';
+import BeeMascot from './components/BeeMascot';
 import RequirementInput from './components/RequirementInput';
 import WorkflowProgress from './components/WorkflowProgress';
 import PlanViewer from './components/PlanViewer';
@@ -196,27 +196,30 @@ export default function App() {
     switch (status) {
       case 'COMPLETED': return 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border-emerald-500/20';
       case 'FAILED': return 'bg-rose-500/10 text-rose-500 dark:text-rose-400 border-rose-500/20';
-      case 'RECEIVED': return 'bg-gray-500/10 text-green-muted border-green-border';
-      default: return 'bg-green-accent/15 text-green-accent border-green-accent/30 animate-pulse font-semibold';
+      case 'RECEIVED': return 'bg-honey-sidebar/20 text-honey-muted border-honey-border';
+      default: return 'bg-honey-accent/15 text-honey-accent border-honey-accent/30 animate-pulse font-semibold';
     }
   };
 
   return (
-    <div className="flex h-screen bg-green-bg text-green-text transition-all duration-300 overflow-hidden">
+    <div className="flex h-screen bg-honey-bg text-honey-text transition-all duration-300 overflow-hidden relative">
       
+      {/* Decorative background honeycomb pattern over the application */}
+      <div className="absolute inset-0 honeycomb-bg opacity-3 pointer-events-none" />
+
       {/* SIDEBAR */}
-      <div className="w-80 border-r border-green-border bg-green-sidebar/40 backdrop-blur-xl flex flex-col shrink-0">
+      <div className="w-80 border-r border-honey-border bg-honey-sidebar/10 backdrop-blur-xl flex flex-col shrink-0 relative z-10">
         
         {/* Sidebar Header Logo */}
-        <div className="p-4.5 border-b border-green-border flex items-center justify-between">
+        <div className="p-4.5 border-b border-honey-border flex items-center justify-between bg-honey-card/50">
           <div className="flex items-center gap-2">
-            <TortoiseMascot isMoving={false} className="w-5.5 h-5.5 text-green-accent" />
-            <span className="font-bold text-base tracking-wider bg-gradient-to-r from-green-accent to-emerald-500 bg-clip-text text-transparent">AMASEP</span>
-            <span className="text-[9px] font-mono px-1.5 py-0.25 bg-green-accent/10 text-green-accent border border-green-accent/25 rounded-md">IDE</span>
+            <BeeMascot isMoving={false} className="w-5.5 h-5.5 text-honey-accent" />
+            <span className="font-bold text-base tracking-wider bg-gradient-to-r from-honey-accent to-amber-500 bg-clip-text text-transparent">AMASEP</span>
+            <span className="text-[9px] font-mono px-1.5 py-0.25 bg-honey-accent/10 text-honey-accent border border-honey-accent/25 rounded-md">IDE</span>
           </div>
           <button 
             onClick={() => { setSelectedSessionId(null); setActiveSession(null); }}
-            className="text-xs px-2.5 py-1.5 bg-green-accent text-green-bg rounded-lg hover:bg-green-accent-hover transition-colors font-medium flex items-center gap-1 shadow-sm"
+            className="text-xs px-2.5 py-1.5 bg-honey-accent text-honey-bg rounded-lg hover:bg-honey-accent-hover transition-all font-semibold flex items-center gap-1 shadow-md shadow-honey-accent/10 cursor-pointer"
             title="Create New Run"
           >
             <span>New</span>
@@ -233,12 +236,12 @@ export default function App() {
 
         {/* Sessions list */}
         <div className="flex-1 overflow-y-auto p-3.5 space-y-2">
-          <div className="flex items-center gap-1.5 px-2 text-[10px] font-semibold text-green-muted uppercase tracking-wider mb-2 text-left">
+          <div className="flex items-center gap-1.5 px-2 text-[10px] font-semibold text-honey-muted uppercase tracking-wider mb-2 text-left">
             <History className="h-3.5 w-3.5" />
             <span>Development Runs</span>
           </div>
           {sessions.length === 0 ? (
-            <div className="text-center py-10 text-xs text-green-muted/50 border border-dashed border-green-border/80 rounded-2xl">
+            <div className="text-center py-10 text-xs text-honey-muted/50 border border-dashed border-honey-border/80 rounded-2xl">
               No sessions created yet
             </div>
           ) : (
@@ -248,17 +251,17 @@ export default function App() {
                 onClick={() => { setSelectedSessionId(s.id); }}
                 className={`group p-3 rounded-2xl border text-left cursor-pointer transition-all ${
                   selectedSessionId === s.id
-                    ? 'bg-green-card border-green-accent/60 shadow-lg shadow-green-accent/5'
-                    : 'bg-green-card/30 border-green-border/60 hover:bg-green-card hover:border-green-border'
+                    ? 'bg-honey-card border-honey-accent/60 shadow-lg shadow-honey-accent/5'
+                    : 'bg-honey-card/35 border-honey-border/60 hover:bg-honey-card hover:border-honey-border'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <span className="font-semibold text-xs text-green-text line-clamp-2 leading-relaxed flex-1">
+                  <span className="font-semibold text-xs text-honey-text line-clamp-2 leading-relaxed flex-1">
                     {s.requirement}
                   </span>
                   <button 
                     onClick={(e) => handleDeleteSession(s.id, e)}
-                    className="opacity-0 group-hover:opacity-100 hover:text-rose-500 text-green-muted/50 p-1 hover:bg-green-sidebar rounded-lg transition-all"
+                    className="opacity-0 group-hover:opacity-100 hover:text-rose-500 text-honey-muted/50 p-1 hover:bg-honey-sidebar rounded-lg transition-all cursor-pointer"
                     title="Delete session"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -268,7 +271,7 @@ export default function App() {
                   <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full border ${getStatusBadgeStyles(s.status)}`}>
                     {s.status}
                   </span>
-                  <span className="text-[9px] text-green-muted/60 font-mono">
+                  <span className="text-[9px] text-honey-muted/60 font-mono">
                     ID #{s.id}
                   </span>
                 </div>
@@ -277,13 +280,13 @@ export default function App() {
           )}
         </div>
 
-        <div className="p-3 bg-green-sidebar/10 border-t border-green-border text-[9px] text-green-muted/50 font-mono text-center">
+        <div className="p-3 bg-honey-sidebar/5 border-t border-honey-border text-[9px] text-honey-muted/50 font-mono text-center">
           AMASEP • Autonomous Agent Engine
         </div>
       </div>
 
       {/* WORKSPACE MAIN PANEL */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-green-bg">
+      <div className="flex-1 flex flex-col overflow-hidden bg-honey-bg relative z-10">
         
         {/* Header bar */}
         <Header onLogoClick={() => { setSelectedSessionId(null); setActiveSession(null); }} />
@@ -298,17 +301,19 @@ export default function App() {
             <div className="p-6 space-y-6 max-w-5xl mx-auto pb-12 animate-fade-in">
               
               {/* RUN META CARD HEADER */}
-              <div className="bg-green-card border border-green-border rounded-3xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
-                <div>
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-green-muted mb-1">Active Request</h2>
-                  <p className="text-sm font-semibold text-green-text leading-relaxed">{activeSession.requirement}</p>
+              <div className="bg-honey-card border border-honey-border rounded-3xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 text-left relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-16 honeycomb-bg opacity-5 pointer-events-none" />
+
+                <div className="relative z-10">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-honey-muted mb-1">Active Request</h2>
+                  <p className="text-sm font-semibold text-honey-text leading-relaxed">{activeSession.requirement}</p>
                 </div>
 
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-3 shrink-0 relative z-10">
                   {['COMPLETED', 'FAILED'].includes(activeSession.status) && (
                     <button
                       onClick={() => handleRetryRun(activeSession.id)}
-                      className="flex items-center gap-1.5 px-3 py-2 bg-green-sidebar border border-green-border hover:bg-green-card text-green-text hover:text-green-accent text-xs font-medium rounded-xl transition-all"
+                      className="flex items-center gap-1.5 px-3 py-2 bg-honey-sidebar/20 border border-honey-border hover:bg-honey-card text-honey-text hover:text-honey-accent text-xs font-medium rounded-xl transition-all cursor-pointer"
                     >
                       <RefreshCw className="h-3.5 w-3.5" />
                       <span>Retry Pipeline</span>
@@ -317,7 +322,7 @@ export default function App() {
                   <button
                     onClick={() => downloadProject(activeSession)}
                     disabled={activeSession.files.length === 0}
-                    className="flex items-center gap-1.5 px-4.5 py-2 bg-green-accent hover:bg-green-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-green-bg text-xs font-semibold rounded-xl transition-all shadow-md shadow-green-accent/15"
+                    className="flex items-center gap-1.5 px-4.5 py-2 bg-honey-accent hover:bg-honey-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-honey-bg text-xs font-bold rounded-xl transition-all shadow-md shadow-honey-accent/15 cursor-pointer"
                   >
                     <Download className="h-3.5 w-3.5" />
                     <span>Download Project</span>
@@ -339,8 +344,8 @@ export default function App() {
                     <CheckCircle className="h-5.5 w-5.5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-green-text">Generation Completed Successfully</h3>
-                    <p className="text-xs text-green-muted mt-1 leading-relaxed">
+                    <h3 className="text-sm font-bold text-honey-text">Generation Completed Successfully</h3>
+                    <p className="text-xs text-honey-muted mt-1 leading-relaxed">
                       The application modules have been completely generated and successfully validated against all PyTest assertions in the isolated Docker sandbox. You can download the completed workspace directory directly.
                     </p>
                   </div>
@@ -348,43 +353,43 @@ export default function App() {
               )}
 
               {/* PIPELINE DATA TAB SWITCHER */}
-              <div className="flex border-b border-green-border/80">
+              <div className="flex border-b border-honey-border/80">
                 <button
                   onClick={() => setActiveTab('plan')}
-                  className={`py-3 px-4 border-b-2 text-xs font-semibold tracking-wider uppercase transition-all ${
+                  className={`py-3 px-4 border-b-2 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
                     activeTab === 'plan'
-                      ? 'border-green-accent text-green-accent'
-                      : 'border-transparent text-green-muted hover:text-green-text'
+                      ? 'border-honey-accent text-honey-accent'
+                      : 'border-transparent text-honey-muted hover:text-honey-text'
                   }`}
                 >
                   Plan
                 </button>
                 <button
                   onClick={() => setActiveTab('code')}
-                  className={`py-3 px-4 border-b-2 text-xs font-semibold tracking-wider uppercase transition-all ${
+                  className={`py-3 px-4 border-b-2 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
                     activeTab === 'code'
-                      ? 'border-green-accent text-green-accent'
-                      : 'border-transparent text-green-muted hover:text-green-text'
+                      ? 'border-honey-accent text-honey-accent'
+                      : 'border-transparent text-honey-muted hover:text-honey-text'
                   }`}
                 >
                   Workspace
                 </button>
                 <button
                   onClick={() => setActiveTab('logs')}
-                  className={`py-3 px-4 border-b-2 text-xs font-semibold tracking-wider uppercase transition-all ${
+                  className={`py-3 px-4 border-b-2 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
                     activeTab === 'logs'
-                      ? 'border-green-accent text-green-accent'
-                      : 'border-transparent text-green-muted hover:text-green-text'
+                      ? 'border-honey-accent text-honey-accent'
+                      : 'border-transparent text-honey-muted hover:text-honey-text'
                   }`}
                 >
                   Tests
                 </button>
                 <button
                   onClick={() => setActiveTab('review')}
-                  className={`py-3 px-4 border-b-2 text-xs font-semibold tracking-wider uppercase transition-all ${
+                  className={`py-3 px-4 border-b-2 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
                     activeTab === 'review'
-                      ? 'border-green-accent text-green-accent'
-                      : 'border-transparent text-green-muted hover:text-green-text'
+                      ? 'border-honey-accent text-honey-accent'
+                      : 'border-transparent text-honey-muted hover:text-honey-text'
                   }`}
                 >
                   Review

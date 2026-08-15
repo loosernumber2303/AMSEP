@@ -27,7 +27,7 @@ export default function ThemeToggle() {
     <button
       onClick={toggleTheme}
       aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-      className="p-2 rounded-xl border border-green-border bg-green-card hover:bg-green-sidebar text-green-text hover:text-green-accent transition-all duration-200"
+      className="p-2 rounded-xl border border-honey-border bg-honey-card hover:bg-honey-sidebar text-honey-text hover:text-honey-accent transition-all duration-200 cursor-pointer"
     >
       {theme === 'light' ? (
         <Moon className="h-4.5 w-4.5" />

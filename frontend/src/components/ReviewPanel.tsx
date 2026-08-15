@@ -24,20 +24,20 @@ export default function ReviewPanel({ testResults, status }: ReviewPanelProps) {
 
   if (['ANALYSIS'].includes(status)) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 bg-green-card border border-green-border rounded-2xl p-6 text-center">
-        <Loader2 className="h-8 w-8 animate-spin text-green-accent mb-3" />
-        <p className="text-sm text-green-text font-medium">Conducting automated code review...</p>
-        <p className="text-xs text-green-muted mt-1">Analyzing pytest outputs and drafting code repair directives.</p>
+      <div className="flex flex-col items-center justify-center py-20 bg-honey-card border border-honey-border rounded-2xl p-6 text-center">
+        <Loader2 className="h-8 w-8 animate-spin text-honey-accent mb-3" />
+        <p className="text-sm text-honey-text font-semibold">Conducting automated code review...</p>
+        <p className="text-xs text-honey-muted mt-1">Analyzing pytest outputs and drafting code repair directives.</p>
       </div>
     );
   }
 
   if (!latestResult) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 bg-green-card border border-green-border rounded-2xl p-6 text-center">
-        <AlertTriangle className="h-8 w-8 text-green-muted/40 mb-3" />
-        <p className="text-sm text-green-muted font-medium">Review report pending</p>
-        <p className="text-xs text-green-muted/60 mt-1">Run tests in the sandbox to generate a review analysis.</p>
+      <div className="flex flex-col items-center justify-center py-20 bg-honey-card border border-honey-border rounded-2xl p-6 text-center">
+        <AlertTriangle className="h-8 w-8 text-honey-muted/40 mb-3" />
+        <p className="text-sm text-honey-muted font-medium">Review report pending</p>
+        <p className="text-xs text-honey-muted/60 mt-1">Run tests in the sandbox to generate a review analysis.</p>
       </div>
     );
   }
@@ -59,31 +59,34 @@ export default function ReviewPanel({ testResults, status }: ReviewPanelProps) {
 
   if (latestResult.passed) {
     return (
-      <div className="bg-green-card border border-green-border rounded-2xl p-6 shadow-sm text-left space-y-4 animate-fade-in">
-        <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-xl">
+      <div className="bg-honey-card border border-honey-border rounded-2xl p-6 shadow-sm text-left space-y-4 animate-fade-in relative overflow-hidden">
+        {/* Subtle decorative honeycomb element */}
+        <div className="absolute top-0 right-0 w-24 h-24 honeycomb-bg opacity-5 pointer-events-none rounded-2xl" />
+
+        <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-xl relative z-10">
           <CheckCircle className="h-6 w-6 shrink-0 text-emerald-500" />
           <div>
-            <h4 className="text-sm font-semibold">Verification Successful</h4>
+            <h4 className="text-sm font-bold">Verification Successful</h4>
             <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">All unit tests executed inside the sandbox passed with exit code 0.</p>
           </div>
         </div>
 
-        <div className="border border-green-border/80 rounded-xl p-5 bg-green-sidebar/20 space-y-3">
-          <h3 className="text-sm font-semibold text-green-text flex items-center gap-2">
-            <ShieldCheck className="h-4.5 w-4.5 text-green-accent" />
+        <div className="border border-honey-border/80 rounded-xl p-5 bg-honey-sidebar/10 space-y-3 relative z-10">
+          <h3 className="text-sm font-semibold text-honey-text flex items-center gap-2">
+            <ShieldCheck className="h-4.5 w-4.5 text-honey-accent" />
             <span>Code Review Recommendations</span>
           </h3>
-          <ul className="space-y-2 text-xs text-green-muted leading-relaxed">
+          <ul className="space-y-2 text-xs text-honey-muted leading-relaxed">
             <li className="flex items-start gap-2">
-              <span className="text-green-accent font-bold mt-0.5">•</span>
+              <span className="text-honey-accent font-bold mt-0.5">•</span>
               <span><strong>Modular Integrity:</strong> The generated code adheres to standard functional layout guidelines.</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-green-accent font-bold mt-0.5">•</span>
+              <span className="text-honey-accent font-bold mt-0.5">•</span>
               <span><strong>Clean Testing coverage:</strong> Assertions fully cover the expected boundary ranges for math operations.</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-green-accent font-bold mt-0.5">•</span>
+              <span className="text-honey-accent font-bold mt-0.5">•</span>
               <span><strong>Ready for Download:</strong> Code structure and environment configs are aligned. Ready to build and package.</span>
             </li>
           </ul>
@@ -93,11 +96,14 @@ export default function ReviewPanel({ testResults, status }: ReviewPanelProps) {
   }
 
   return (
-    <div className="bg-green-card border border-green-border rounded-2xl p-6 shadow-sm text-left space-y-4 animate-fade-in">
-      <div className="flex items-center gap-3 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl">
+    <div className="bg-honey-card border border-honey-border rounded-2xl p-6 shadow-sm text-left space-y-4 animate-fade-in relative overflow-hidden">
+      {/* Subtle decorative honeycomb element */}
+      <div className="absolute top-0 right-0 w-24 h-24 honeycomb-bg opacity-5 pointer-events-none rounded-2xl" />
+
+      <div className="flex items-center gap-3 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl relative z-10">
         <AlertTriangle className="h-6 w-6 shrink-0 text-rose-500" />
         <div>
-          <h4 className="text-sm font-semibold">Verification FAILED</h4>
+          <h4 className="text-sm font-bold">Verification FAILED</h4>
           <p className="text-xs text-rose-600 dark:text-rose-400 mt-0.5">
             {latestResult.failed_tests} tests failed during the sandbox verification check.
           </p>
@@ -105,8 +111,8 @@ export default function ReviewPanel({ testResults, status }: ReviewPanelProps) {
       </div>
 
       {failureItems.length > 0 && (
-        <div className="border border-green-border/80 rounded-xl p-4 bg-green-sidebar/10">
-          <h4 className="text-xs font-semibold text-green-text uppercase tracking-wider mb-2">Failing Test Cases</h4>
+        <div className="border border-honey-border/80 rounded-xl p-4 bg-honey-sidebar/5 relative z-10">
+          <h4 className="text-xs font-semibold text-honey-text uppercase tracking-wider mb-2">Failing Test Cases</h4>
           <ul className="space-y-1.5 font-mono text-[11px] text-rose-500">
             {failureItems.map((item, idx) => (
               <li key={idx} className="break-all flex items-start gap-2">
@@ -118,19 +124,19 @@ export default function ReviewPanel({ testResults, status }: ReviewPanelProps) {
         </div>
       )}
 
-      <div className="border border-green-border/80 rounded-xl p-5 bg-green-sidebar/20 space-y-3">
-        <h4 className="text-sm font-semibold text-green-text">Automated Bug Repair Plan</h4>
-        <ul className="space-y-2 text-xs text-green-muted leading-relaxed">
+      <div className="border border-honey-border/80 rounded-xl p-5 bg-honey-sidebar/10 space-y-3 relative z-10">
+        <h4 className="text-sm font-semibold text-honey-text">Automated Bug Repair Plan</h4>
+        <ul className="space-y-2 text-xs text-honey-muted leading-relaxed">
           <li className="flex items-start gap-2">
-            <span className="text-green-accent font-bold mt-0.5">•</span>
+            <span className="text-honey-accent font-bold mt-0.5">•</span>
             <span><strong>Traceback Scan:</strong> Backend scanner mapped failing test assertions from sandbox stack traces.</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-green-accent font-bold mt-0.5">•</span>
+            <span className="text-honey-accent font-bold mt-0.5">•</span>
             <span><strong>Code Fix Directives:</strong> Coder agent will update the corresponding boundary conditions and exceptions handling logic.</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-green-accent font-bold mt-0.5">•</span>
+            <span className="text-honey-accent font-bold mt-0.5">•</span>
             <span><strong>Re-evaluation Loop:</strong> System will run the revised project files in the sandbox in the next attempt.</span>
           </li>
         </ul>

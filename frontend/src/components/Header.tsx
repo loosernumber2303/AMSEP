@@ -1,5 +1,5 @@
 import ThemeToggle from './ThemeToggle';
-import TortoiseMascot from './TortoiseMascot';
+import BeeMascot from './BeeMascot';
 import { ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -33,40 +33,46 @@ export default function Header({ onLogoClick }: HeaderProps) {
   }, []);
 
   return (
-    <header className="h-16 border-b border-green-border bg-green-card/85 backdrop-blur-md flex items-center justify-between px-6 shrink-0 transition-all duration-300">
+    <header className="h-16 border-b border-honey-border bg-honey-card/85 backdrop-blur-md flex items-center justify-between px-6 shrink-0 transition-all duration-300 relative z-20">
+      
+      {/* Decorative honeycomb background overlay for header */}
+      <div className="absolute inset-0 honeycomb-bg opacity-5 pointer-events-none" />
+
       <div 
         onClick={onLogoClick}
-        className="flex items-center gap-2.5 cursor-pointer group"
+        className="flex items-center gap-2.5 cursor-pointer group relative z-10"
       >
-        <TortoiseMascot isMoving={false} className="w-8 h-8 group-hover:scale-110 transition-transform duration-300" />
+        <BeeMascot isMoving={false} className="w-8 h-8 group-hover:scale-110 transition-transform duration-300" />
+        
         <div className="text-left">
           <div className="flex items-center gap-1.5">
-            <span className="font-bold text-base tracking-wider bg-gradient-to-r from-green-accent to-emerald-500 bg-clip-text text-transparent">
+            <span className="font-bold text-base tracking-wider bg-gradient-to-r from-honey-accent to-amber-500 bg-clip-text text-transparent">
               AMASEP
             </span>
-            <span className="text-[10px] font-mono px-1.5 py-0.25 bg-green-accent/10 text-green-accent border border-green-accent/25 rounded-md">
+            <span className="text-[10px] font-mono px-1.5 py-0.25 bg-honey-accent/10 text-honey-accent border border-honey-accent/25 rounded-md">
               v1.0
             </span>
           </div>
-          <p className="text-[10px] text-green-muted font-medium">
+          <p className="text-[10px] text-honey-muted font-medium">
             Autonomous Software Engine
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 relative z-10">
         {/* Backend health status pill */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-green-border bg-green-sidebar text-[11px] font-medium">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-honey-border bg-honey-sidebar/35 text-[11px] font-medium">
           {backendStatus === 'loading' && (
             <>
               <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-              <span className="text-green-muted">Connecting...</span>
+              <span className="text-honey-muted">Connecting...</span>
             </>
           )}
           {backendStatus === 'ok' && (
             <>
+              {/* semantic success color green is allowed */}
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-              <span className="text-green-text">Sandbox Active</span>
+              <span className="text-honey-text">Sandbox Active</span>
             </>
           )}
           {backendStatus === 'error' && (

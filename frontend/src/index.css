@@ -1,38 +1,38 @@
 @import "tailwindcss";
 
 @theme {
-  --color-green-bg: var(--bg-app);
-  --color-green-card: var(--bg-card);
-  --color-green-sidebar: var(--bg-sidebar);
-  --color-green-border: var(--border-app);
-  --color-green-text: var(--text-primary);
-  --color-green-muted: var(--text-secondary);
-  --color-green-accent: var(--color-accent);
-  --color-green-accent-hover: var(--color-accent-hover);
+  --color-honey-bg: var(--bg-app);
+  --color-honey-card: var(--bg-card);
+  --color-honey-sidebar: var(--bg-sidebar);
+  --color-honey-border: var(--border-app);
+  --color-honey-text: var(--text-primary);
+  --color-honey-muted: var(--text-secondary);
+  --color-honey-accent: var(--color-accent);
+  --color-honey-accent-hover: var(--color-accent-hover);
 }
 
 :root {
-  /* LIGHT MODE - Warm/off-white background, deep forest green accents */
-  --bg-app: #fbfbfa;          /* warm off-white */
-  --bg-card: #ffffff;         /* clean white card */
-  --bg-sidebar: #f5f4ef;      /* warm pale gray/green sidebar */
-  --border-app: #e5e3d9;      /* warm subtle border */
-  --text-primary: #12241a;     /* deep forest green text */
-  --text-secondary: #485c50;   /* readable soft forest green */
-  --color-accent: #0f766e;     /* forest teal green accent */
-  --color-accent-hover: #0d9488;
+  /* LIGHT MODE - Honey/Amber visual identity */
+  --bg-app: #FFFCF2;          /* premium warm honey-white */
+  --bg-card: #FFFFFF;         /* clean white card */
+  --bg-sidebar: #F5E6B3;      /* subtle warm cream honeycomb sidebar */
+  --border-app: #E6DFCD;      /* subtle warm border */
+  --text-primary: #262626;     /* dark readable charcoal text */
+  --text-secondary: #5A5240;   /* soft muted honey-brown text */
+  --color-accent: #D99400;     /* rich honey/amber accent */
+  --color-accent-hover: #F4B400; /* bright yellow accent hover */
 }
 
 .dark {
-  /* DARK MODE - Very dark green/near-black background, forest green cards */
-  --bg-app: #030805;          /* near-black dark green */
-  --bg-card: #08120d;         /* deep forest-green card */
-  --bg-sidebar: #050d09;      /* dark green-black sidebar */
-  --border-app: #12251a;      /* subtle forest green border */
-  --text-primary: #ecfdf5;     /* soft mint-white primary text */
-  --text-secondary: #86efac;   /* soft mint muted text */
-  --color-accent: #10b981;     /* emerald accent */
-  --color-accent-hover: #34d399;
+  /* DARK MODE - Premium black + honey/gold developer identity */
+  --bg-app: #11100D;          /* near-black dark gold bg */
+  --bg-card: #1A1812;         /* dark forest-green replaced by deep honey-black card */
+  --bg-sidebar: #0E0D0A;      /* ultra dark black-gold sidebar */
+  --border-app: #3A3018;      /* subtle honeycomb gold-brown border */
+  --text-primary: #FFFDF5;     /* soft warm cream/white text */
+  --text-secondary: #C0B496;   /* muted warm gold-gray text */
+  --color-accent: #FBBF24;     /* primary yellow gold */
+  --color-accent-hover: #FCD34D; /* bright yellow gold hover */
 }
 
 body {
@@ -42,6 +42,43 @@ body {
   color: var(--text-primary);
   overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Honeycomb repeating background helper */
+.honeycomb-bg {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='96' viewBox='0 0 56 96'%3E%3Cpath d='M28 2L52 16v28L28 58L4 44V16z M28 50L52 64v28L28 106L4 92v-28z' fill='none' stroke='%23D4C49E' stroke-width='0.8' opacity='0.25'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+.dark .honeycomb-bg {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='96' viewBox='0 0 56 96'%3E%3Cpath d='M28 2L52 16v28L28 58L4 44V16z M28 50L52 64v28L28 106L4 92v-28z' fill='none' stroke='%233A3018' stroke-width='0.8' opacity='0.4'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+/* Keyframes for wing flutter animation */
+@keyframes wingFlutter {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.3); }
+}
+
+.wing-animate-l {
+  transform-origin: 32px 26px;
+  animation: wingFlutter 0.15s linear infinite;
+}
+
+.wing-animate-r {
+  transform-origin: 32px 26px;
+  animation: wingFlutter 0.15s linear infinite alternate;
+}
+
+/* Keyframes for particle/glow completed effect */
+@keyframes honeyGlow {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.4)); }
+  50% { filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.8)); }
+}
+
+.honey-glow-active {
+  animation: honeyGlow 2s infinite ease-in-out;
 }
 
 /* Custom scrollbars */
