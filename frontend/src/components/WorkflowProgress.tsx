@@ -1,21 +1,19 @@
+import { Check, Loader2, AlertTriangle } from 'lucide-react';
 import BeeMascot from './BeeMascot';
-import { Check, AlertTriangle, Loader2 } from 'lucide-react';
+
+export type WorkflowStage = 'PLAN' | 'CODE' | 'TEST' | 'REVIEW';
+export type StageState = 'pending' | 'active' | 'completed' | 'failed';
 
 interface WorkflowProgressProps {
   status: string;
   filesCount: number;
   testResultsCount: number;
+  currentAttempt?: number;
+  maxAttempts?: number;
+  correctionHistoryCount?: number;
 }
 
-export type StageState = 'pending' | 'active' | 'completed' | 'failed';
-export type WorkflowStage = 'PLAN' | 'CODE' | 'TEST' | 'REVIEW';
-
-interface Stage {
-  key: WorkflowStage;
-  label: string;
-}
-
-const STAGES: Stage[] = [
+const STAGES: { key: WorkflowStage; label: string }[] = [
   { key: 'PLAN', label: 'Plan' },
   { key: 'CODE', label: 'Code' },
   { key: 'TEST', label: 'Test' },
@@ -23,7 +21,20 @@ const STAGES: Stage[] = [
 ];
 
 export function workflowStateToStage(status: string, filesCount: number, testResultsCount: number): { stage: WorkflowStage; state: StageState } {
-  if (status === 'FAILED') {
+  if (status === 'FAILED' || status.endsWith('_FAILED')) {
+    if (status === 'PLANNING_FAILED') {
+      return { stage: 'PLAN', state: 'failed' };
+    } else if (status === 'CODING_FAILED') {
+      return { stage: 'CODE', state: 'failed' };
+    } else if (status === 'TESTING_FAILED') {
+      return { stage: 'TEST', state: 'failed' };
+    } else if (status === 'REVIEW_FAILED') {
+      return { stage: 'REVIEW', state: 'failed' };
+    } else if (status === 'CORRECTION_LIMIT_REACHED') {
+      return { stage: 'TEST', state: 'failed' };
+    }
+
+    // Fallback logic
     if (filesCount === 0) {
       return { stage: 'PLAN', state: 'failed' };
     } else if (filesCount > 0 && testResultsCount === 0) {
@@ -48,7 +59,13 @@ export function workflowStateToStage(status: string, filesCount: number, testRes
       return { stage: 'TEST', state: 'active' };
     case 'TEST_RESULTS_READY':
       return { stage: 'TEST', state: 'completed' };
+    case 'DIAGNOSING':
+    case 'RETESTING':
+      return { stage: 'TEST', state: 'active' };
+    case 'CORRECTING':
+      return { stage: 'CODE', state: 'active' };
     case 'ANALYSIS':
+    case 'REVIEWING':
       return { stage: 'REVIEW', state: 'active' };
     case 'COMPLETED':
       return { stage: 'REVIEW', state: 'completed' };
@@ -96,7 +113,14 @@ function HoneyJar({ className = 'w-6 h-6' }: { className?: string }) {
   );
 }
 
-export default function WorkflowProgress({ status, filesCount, testResultsCount }: WorkflowProgressProps) {
+export default function WorkflowProgress({ 
+  status, 
+  filesCount, 
+  testResultsCount,
+  currentAttempt,
+  maxAttempts,
+  correctionHistoryCount
+}: WorkflowProgressProps) {
   
   const getStageStates = (): { states: StageState[]; activeIndex: number } => {
     const states: StageState[] = ['pending', 'pending', 'pending', 'pending'];
@@ -126,8 +150,9 @@ export default function WorkflowProgress({ status, filesCount, testResultsCount 
   const { states, activeIndex } = getStageStates();
   const positionPercentage = (activeIndex / 3) * 100;
   
-  const isMoving = !['COMPLETED', 'FAILED', 'RECEIVED'].includes(status) && status.trim() !== '';
+  const isMoving = !['COMPLETED', 'FAILED', 'RECEIVED', 'CORRECTION_LIMIT_REACHED'].includes(status) && status.trim() !== '';
   const isCompleted = status === 'COMPLETED';
+  const isRepairing = ['DIAGNOSING', 'CORRECTING', 'RETESTING'].includes(status);
 
   return (
     <div className="w-full bg-honey-card border border-honey-border rounded-3xl p-6 shadow-xl transition-all duration-300 relative overflow-hidden">
@@ -237,6 +262,52 @@ export default function WorkflowProgress({ status, filesCount, testResultsCount 
           })}
         </div>
       </div>
+
+      {/* Correction loop status card */}
+      {isRepairing && (
+        <div className="mt-4 p-3.5 bg-rose-500/5 border border-rose-500/20 rounded-2xl text-left animate-fade-in relative">
+          <div className="flex items-start gap-2.5 text-rose-500">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+            <span className="text-xs font-bold leading-relaxed">
+              Tests failed — AMASEP is diagnosing and correcting the implementation.
+            </span>
+          </div>
+          <div className="mt-2.5 flex items-center justify-between text-[11px] text-honey-muted font-mono">
+            <span>Correction Attempt {currentAttempt || 1} / {maxAttempts || 3}</span>
+            <span className="flex items-center gap-1.5 font-sans font-semibold text-honey-accent">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              {status === 'DIAGNOSING' ? 'Diagnosing crash log...' : status === 'CORRECTING' ? 'Refactoring implementation...' : 'Retesting sandbox...'}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Success after repair notification */}
+      {status === 'COMPLETED' && (correctionHistoryCount ?? 0) > 0 && (
+        <div className="mt-4 p-3.5 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl text-left animate-fade-in">
+          <div className="flex items-center gap-2.5 text-emerald-500">
+            <Check className="h-4.5 w-4.5 stroke-[3] shrink-0" />
+            <span className="text-xs font-bold leading-relaxed">
+              Tests passed successfully after {correctionHistoryCount} autonomous correction{correctionHistoryCount === 1 ? '' : 's'}.
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Fail after max retries notification */}
+      {status === 'CORRECTION_LIMIT_REACHED' && (
+        <div className="mt-4 p-3.5 bg-rose-500/10 border border-rose-500/25 rounded-2xl text-left animate-fade-in">
+          <div className="flex items-start gap-2.5 text-rose-500">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xs font-bold leading-relaxed">Autonomous correction limit reached.</span>
+              <p className="text-[11px] text-rose-500/80 leading-relaxed font-sans font-medium">
+                Unable to resolve test failures after {maxAttempts || 3} attempts.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
