@@ -76,8 +76,8 @@ interface Session {
   current_attempt: number;
   max_attempts: number;
   plan_json: string | null;
-  session_type: string;
-  analysis_report_json: string | null;
+  session_type?: string;
+  analysis_report_json?: string | null;
   created_at: string;
   updated_at: string | null;
   files: ProjectFile[];
