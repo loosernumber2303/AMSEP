@@ -13,7 +13,8 @@ import {
   CheckSquare,
   BarChart3,
   Terminal,
-  Loader2
+  Loader2,
+  Sparkles
 } from 'lucide-react';
 
 import Header from './components/Header';
@@ -24,6 +25,8 @@ import PlanViewer from './components/PlanViewer';
 import CodeViewer from './components/CodeViewer';
 import TestResults from './components/TestResults';
 import ReviewPanel from './components/ReviewPanel';
+import ValidationPanel from './components/ValidationPanel';
+import FinalApprovalPanel from './components/FinalApprovalPanel';
 
 // Type definitions
 interface ProjectFile {
@@ -78,6 +81,9 @@ interface Session {
   plan_json: string | null;
   session_type?: string;
   analysis_report_json?: string | null;
+  review_report_json?: string | null;
+  validation_checklist_json?: string | null;
+  audit_trail?: any[];
   created_at: string;
   updated_at: string | null;
   files: ProjectFile[];
@@ -96,7 +102,7 @@ export default function App() {
   const [apiError, setApiError] = useState<string | null>(null);
   
   // Tab controller
-  const [activeTab, setActiveTab] = useState<'plan' | 'code' | 'logs' | 'history' | 'review'>('plan');
+  const [activeTab, setActiveTab] = useState<'plan' | 'code' | 'logs' | 'review' | 'validation' | 'approval' | 'history'>('plan');
 
   // Existing Project sub-sections active tab
   const [analysisTab, setAnalysisTab] = useState<'stack' | 'arch' | 'quality' | 'security' | 'perf' | 'tests' | 'recs'>('stack');
@@ -143,7 +149,7 @@ export default function App() {
     fetchSessionDetail(selectedSessionId);
     
     const isRunning = (status: string) => {
-      return !['COMPLETED', 'FAILED', 'CORRECTION_LIMIT_REACHED'].includes(status);
+      return !['COMPLETED', 'FAILED', 'CORRECTION_LIMIT_REACHED', 'PLAN_REVIEW', 'DEVELOPER_WORKSPACE', 'REVIEW_READY', 'MANUAL_VALIDATION', 'FINAL_APPROVAL'].includes(status);
     };
 
     const interval = setInterval(() => {
@@ -233,6 +239,297 @@ export default function App() {
     }
   };
 
+  // Phase 2A: Plan Approval & Code Generation Trigger
+  const handleApprovePlan = async () => {
+    if (!activeSession) return;
+    try {
+      const res = await fetch(`${API_BASE}/sessions/${activeSession.id}/approve_plan`, {
+        method: 'POST'
+      });
+      if (!res.ok) throw new Error('Failed to approve plan');
+      const updated = await res.json();
+      setActiveSession(updated);
+      setActiveTab('code');
+      fetchSessions();
+    } catch (err: any) {
+      console.error(err);
+      setApiError('Failed to approve plan.');
+    }
+  };
+
+  // Phase 2A: Edit Plan
+  const handleUpdatePlan = async (updatedJson: string) => {
+    if (!activeSession) return;
+    try {
+      const res = await fetch(`${API_BASE}/sessions/${activeSession.id}/plan`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan_json: updatedJson })
+      });
+      if (!res.ok) throw new Error('Failed to update plan');
+      const updated = await res.json();
+      setActiveSession(updated);
+    } catch (err: any) {
+      console.error(err);
+      setApiError('Failed to update plan.');
+      throw err;
+    }
+  };
+
+  // Phase 2A: Developer Workspace Save File
+  const handleSaveFile = async (fileId: number, content: string) => {
+    if (!activeSession) return;
+    try {
+      const res = await fetch(`${API_BASE}/sessions/${activeSession.id}/files/${fileId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+      });
+      if (!res.ok) throw new Error('Failed to save file');
+      const updatedFile = await res.json();
+      setActiveSession(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          files: prev.files.map(f => f.id === fileId ? updatedFile : f)
+        };
+      });
+      fetchSessionDetail(activeSession.id);
+    } catch (err: any) {
+      console.error(err);
+      setApiError('Failed to save file.');
+      throw err;
+    }
+  };
+
+  // Phase 2A: Run Application in Sandbox
+  const handleRunApp = async () => {
+    if (!activeSession) return null;
+    try {
+      const res = await fetch(`${API_BASE}/sessions/${activeSession.id}/run_app`, {
+        method: 'POST'
+      });
+      if (!res.ok) throw new Error('Failed to run application');
+      const data = await res.json();
+      fetchSessionDetail(activeSession.id);
+      return data;
+    } catch (err: any) {
+      console.error(err);
+      throw err;
+    }
+  };
+
+  // Phase 2A: Run Tests in Sandbox Workspace
+  const handleRunSessionTests = async () => {
+    if (!activeSession) return null;
+    try {
+      const res = await fetch(`${API_BASE}/sessions/${activeSession.id}/run_session_tests`, {
+        method: 'POST'
+      });
+      if (!res.ok) throw new Error('Failed to run workspace tests');
+      const data = await res.json();
+      fetchSessionDetail(activeSession.id);
+      return data;
+    } catch (err: any) {
+      console.error(err);
+      throw err;
+    }
+  };
+
+  // Phase 2A: Submit Developer Feedback
+  const handleSubmitFeedback = async (feedback: string) => {
+    if (!activeSession) return;
+    try {
+      const res = await fetch(`${API_BASE}/sessions/${activeSession.id}/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feedback })
+      });
+      if (!res.ok) throw new Error('Failed to submit feedback');
+      const updated = await res.json();
+      setActiveSession(updated);
+      fetchSessionDetail(activeSession.id);
+    } catch (err: any) {
+      console.error(err);
+      setApiError('Failed to submit developer feedback.');
+      throw err;
+    }
+  };
+
+  // Phase 2A: Proceed to AI Review
+  const handleProceedToReview = async () => {
+    if (!activeSession) return;
+    try {
+      const res = await fetch(`${API_BASE}/sessions/${activeSession.id}/proceed_to_review`, {
+        method: 'POST'
+      });
+      if (!res.ok) throw new Error('Failed to initiate code review');
+      const updated = await res.json();
+      setActiveSession(updated);
+      setActiveTab('review');
+      fetchSessions();
+    } catch (err: any) {
+      console.error(err);
+      setApiError('Failed to proceed to review.');
+      throw err;
+    }
+  };
+
+  // Phase 2B: Approve AI Review -> Transitions to MANUAL_VALIDATION
+  const handleApproveReview = async () => {
+    if (!activeSession) return;
+    try {
+      const res = await fetch(`${API_BASE}/sessions/${activeSession.id}/approve_review`, {
+        method: 'POST'
+      });
+      if (!res.ok) throw new Error('Failed to approve review');
+      const updated = await res.json();
+      setActiveSession(updated);
+      setActiveTab('validation');
+      fetchSessions();
+    } catch (err: any) {
+      console.error(err);
+      setApiError('Failed to approve review.');
+      throw err;
+    }
+  };
+
+  // Phase 2B: Request Changes -> Returns to DEVELOPER_WORKSPACE
+  const handleRequestChanges = async (feedback: string, stage: string = 'REVIEW') => {
+    if (!activeSession) return;
+    try {
+      const res = await fetch(`${API_BASE}/sessions/${activeSession.id}/request_changes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feedback, stage })
+      });
+      if (!res.ok) throw new Error('Failed to submit change request');
+      const updated = await res.json();
+      setActiveSession(updated);
+      setActiveTab('code');
+      fetchSessions();
+    } catch (err: any) {
+      console.error(err);
+      setApiError('Failed to submit change request.');
+      throw err;
+    }
+  };
+
+  // Phase 2B: Return to Workspace without recording a change request
+  const handleReturnToWorkspace = async () => {
+    if (!activeSession) return;
+    try {
+      const res = await fetch(`${API_BASE}/sessions/${activeSession.id}/return_to_workspace`, {
+        method: 'POST'
+      });
+      if (!res.ok) throw new Error('Failed to return to workspace');
+      const updated = await res.json();
+      setActiveSession(updated);
+      setActiveTab('code');
+      fetchSessions();
+    } catch (err: any) {
+      console.error(err);
+      setApiError('Failed to return to workspace.');
+      throw err;
+    }
+  };
+
+  // Phase 2B: Complete Validation Checklist -> Transitions to FINAL_APPROVAL
+  const handleCompleteValidation = async (checklist: { [key: string]: boolean }, notes: string) => {
+    if (!activeSession) return;
+    try {
+      const res = await fetch(`${API_BASE}/sessions/${activeSession.id}/complete_validation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checklist, notes })
+      });
+      if (!res.ok) throw new Error('Failed to complete validation');
+      const updated = await res.json();
+      setActiveSession(updated);
+      setActiveTab('approval');
+      fetchSessions();
+    } catch (err: any) {
+      console.error(err);
+      setApiError('Failed to complete validation.');
+      throw err;
+    }
+  };
+
+  // Phase 2B: Final Approval -> The ONLY path to COMPLETED
+  const handleFinalApproval = async (notes: string) => {
+    if (!activeSession) return;
+    try {
+      const res = await fetch(`${API_BASE}/sessions/${activeSession.id}/final_approval`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes })
+      });
+      if (!res.ok) throw new Error('Failed to approve project release');
+      const updated = await res.json();
+      setActiveSession(updated);
+      setActiveTab('approval');
+      fetchSessions();
+    } catch (err: any) {
+      console.error(err);
+      setApiError('Failed to grant final approval.');
+      throw err;
+    }
+  };
+
+  // Phase 2B: Diagnose Failure
+  const handleDiagnoseFailure = async () => {
+    if (!activeSession) return null;
+    try {
+      const res = await fetch(`${API_BASE}/sessions/${activeSession.id}/diagnose_failure`, {
+        method: 'POST'
+      });
+      if (!res.ok) throw new Error('Failed to diagnose test failure');
+      return await res.json();
+    } catch (err: any) {
+      console.error(err);
+      throw err;
+    }
+  };
+
+  // Phase 2B: Accept AI Correction
+  const handleAcceptCorrection = async (filePath: string, correctedContent: string) => {
+    if (!activeSession) return null;
+    try {
+      const res = await fetch(`${API_BASE}/sessions/${activeSession.id}/accept_correction`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ file_path: filePath, corrected_content: correctedContent })
+      });
+      if (!res.ok) throw new Error('Failed to apply AI correction');
+      const data = await res.json();
+      fetchSessionDetail(activeSession.id);
+      fetchSessions();
+      return data;
+    } catch (err: any) {
+      console.error(err);
+      throw err;
+    }
+  };
+
+  // Phase 2B: Reject AI Correction
+  const handleRejectCorrection = async (reason: string) => {
+    if (!activeSession) return null;
+    try {
+      const res = await fetch(`${API_BASE}/sessions/${activeSession.id}/reject_correction`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feedback: reason })
+      });
+      if (!res.ok) throw new Error('Failed to reject AI correction');
+      const data = await res.json();
+      fetchSessionDetail(activeSession.id);
+      return data;
+    } catch (err: any) {
+      console.error(err);
+      throw err;
+    }
+  };
+
   // Delete a session
   const handleDeleteSession = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -288,6 +585,12 @@ export default function App() {
       case 'FAILED': 
       case 'CORRECTION_LIMIT_REACHED': return 'bg-rose-500/10 text-rose-500 dark:text-rose-400 border-rose-500/20';
       case 'RECEIVED': return 'bg-honey-sidebar/20 text-honey-muted border-honey-border';
+      case 'PLAN_REVIEW': return 'bg-amber-500/15 text-amber-500 border-amber-500/35 font-semibold';
+      case 'PLAN_APPROVED': return 'bg-honey-accent/15 text-honey-accent border-honey-accent/30 font-semibold';
+      case 'DEVELOPER_WORKSPACE': return 'bg-sky-500/15 text-sky-400 border-sky-500/35 font-semibold';
+      case 'REVIEW_READY': return 'bg-purple-500/15 text-purple-400 border-purple-500/35 font-semibold';
+      case 'MANUAL_VALIDATION': return 'bg-indigo-500/15 text-indigo-400 border-indigo-500/35 font-semibold';
+      case 'FINAL_APPROVAL': return 'bg-amber-500/15 text-amber-400 border-amber-500/35 font-semibold';
       default: return 'bg-honey-accent/15 text-honey-accent border-honey-accent/30 animate-pulse font-semibold';
     }
   };
@@ -793,10 +1096,10 @@ export default function App() {
                   />
 
                   {/* PIPELINE DATA TAB SWITCHER */}
-                  <div className="flex border-b border-honey-border/80">
+                  <div className="flex border-b border-honey-border/80 overflow-x-auto">
                     <button
                       onClick={() => setActiveTab('plan')}
-                      className={`py-3 px-4 border-b-2 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                      className={`py-3 px-4 border-b-2 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer whitespace-nowrap ${
                         activeTab === 'plan'
                           ? 'border-honey-accent text-honey-accent'
                           : 'border-transparent text-honey-muted hover:text-honey-text'
@@ -806,7 +1109,7 @@ export default function App() {
                     </button>
                     <button
                       onClick={() => setActiveTab('code')}
-                      className={`py-3 px-4 border-b-2 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                      className={`py-3 px-4 border-b-2 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer whitespace-nowrap ${
                         activeTab === 'code'
                           ? 'border-honey-accent text-honey-accent'
                           : 'border-transparent text-honey-muted hover:text-honey-text'
@@ -816,7 +1119,7 @@ export default function App() {
                     </button>
                     <button
                       onClick={() => setActiveTab('logs')}
-                      className={`py-3 px-4 border-b-2 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                      className={`py-3 px-4 border-b-2 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer whitespace-nowrap ${
                         activeTab === 'logs'
                           ? 'border-honey-accent text-honey-accent'
                           : 'border-transparent text-honey-muted hover:text-honey-text'
@@ -824,37 +1127,86 @@ export default function App() {
                     >
                       Tests
                     </button>
-                    {activeSession.correction_history && activeSession.correction_history.length > 0 && (
-                      <button
-                        onClick={() => setActiveTab('history')}
-                        className={`py-3 px-4 border-b-2 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
-                          activeTab === 'history'
-                            ? 'border-honey-accent text-honey-accent'
-                            : 'border-transparent text-honey-muted hover:text-honey-text'
-                        }`}
-                      >
-                        Correction History
-                      </button>
-                    )}
                     <button
                       onClick={() => setActiveTab('review')}
-                      className={`py-3 px-4 border-b-2 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                      className={`py-3 px-4 border-b-2 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                         activeTab === 'review'
                           ? 'border-honey-accent text-honey-accent'
                           : 'border-transparent text-honey-muted hover:text-honey-text'
                       }`}
                     >
-                      Review
+                      <span>AI Review</span>
+                      {activeSession.status === 'REVIEW_READY' && (
+                        <span className="h-2 w-2 rounded-full bg-honey-accent animate-ping" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('validation')}
+                      className={`py-3 px-4 border-b-2 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                        activeTab === 'validation'
+                          ? 'border-honey-accent text-honey-accent'
+                          : 'border-transparent text-honey-muted hover:text-honey-text'
+                      }`}
+                    >
+                      <span>Validation</span>
+                      {activeSession.status === 'MANUAL_VALIDATION' && (
+                        <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('approval')}
+                      className={`py-3 px-4 border-b-2 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                        activeTab === 'approval'
+                          ? 'border-honey-accent text-honey-accent'
+                          : 'border-transparent text-honey-muted hover:text-honey-text'
+                      }`}
+                    >
+                      <span>Release Approval</span>
+                      {activeSession.status === 'FINAL_APPROVAL' && (
+                        <span className="h-2 w-2 rounded-full bg-honey-accent animate-ping" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('history')}
+                      className={`py-3 px-4 border-b-2 text-xs font-bold tracking-wider uppercase transition-all cursor-pointer whitespace-nowrap ${
+                        activeTab === 'history'
+                          ? 'border-honey-accent text-honey-accent'
+                          : 'border-transparent text-honey-muted hover:text-honey-text'
+                      }`}
+                    >
+                      Audit & History
                     </button>
                   </div>
 
                   {/* ACTIVE TAB DISPLAY GRID */}
                   <div className="min-h-[300px]">
                     {activeTab === 'plan' && (
-                      <PlanViewer planJson={activeSession.plan_json} status={activeSession.status} />
+                      <PlanViewer 
+                        planJson={activeSession.plan_json} 
+                        status={activeSession.status} 
+                        onApprovePlan={handleApprovePlan}
+                        onUpdatePlan={handleUpdatePlan}
+                        loading={loading}
+                      />
                     )}
                     {activeTab === 'code' && (
-                      <CodeViewer files={activeSession.files} status={activeSession.status} />
+                      <CodeViewer 
+                        files={activeSession.files} 
+                        status={activeSession.status}
+                        sessionId={activeSession.id}
+                        requirement={activeSession.requirement}
+                        planJson={activeSession.plan_json}
+                        logs={activeSession.logs}
+                        onSaveFile={handleSaveFile}
+                        onRunApp={handleRunApp}
+                        onRunTests={handleRunSessionTests}
+                        onSubmitFeedback={handleSubmitFeedback}
+                        onProceedToReview={handleProceedToReview}
+                        onDiagnoseFailure={handleDiagnoseFailure}
+                        onAcceptCorrection={handleAcceptCorrection}
+                        onRejectCorrection={handleRejectCorrection}
+                        loading={loading}
+                      />
                     )}
                     {activeTab === 'logs' && (
                       <TestResults 
@@ -865,8 +1217,86 @@ export default function App() {
                         maxAttempts={activeSession.max_attempts}
                       />
                     )}
+                    {activeTab === 'review' && (
+                      <ReviewPanel 
+                        testResults={activeSession.test_results} 
+                        status={activeSession.status}
+                        reviewReportJson={activeSession.review_report_json}
+                        onApproveReview={handleApproveReview}
+                        onRequestChanges={handleRequestChanges}
+                        onReturnToWorkspace={handleReturnToWorkspace}
+                        loading={loading}
+                      />
+                    )}
+                    {activeTab === 'validation' && (
+                      <ValidationPanel 
+                        sessionId={activeSession.id}
+                        status={activeSession.status}
+                        requirement={activeSession.requirement}
+                        files={activeSession.files}
+                        testResults={activeSession.test_results}
+                        onCompleteValidation={handleCompleteValidation}
+                        onRequestChanges={handleRequestChanges}
+                        onReturnToWorkspace={handleReturnToWorkspace}
+                        onRunApp={handleRunApp}
+                        onRunTests={handleRunSessionTests}
+                        initialNotes={activeSession.validation_checklist_json ? (JSON.parse(activeSession.validation_checklist_json)?.notes || '') : ''}
+                        loading={loading}
+                      />
+                    )}
+                    {activeTab === 'approval' && (
+                      <FinalApprovalPanel 
+                        sessionId={activeSession.id}
+                        status={activeSession.status}
+                        requirement={activeSession.requirement}
+                        planJson={activeSession.plan_json}
+                        files={activeSession.files}
+                        testResults={activeSession.test_results}
+                        reviewReportJson={activeSession.review_report_json}
+                        validationChecklistJson={activeSession.validation_checklist_json}
+                        auditTrail={activeSession.audit_trail}
+                        onFinalApproval={handleFinalApproval}
+                        onRejectToWorkspace={(notes) => handleRequestChanges(notes, 'APPROVAL')}
+                        onExportProject={handleDownloadWorkspace}
+                        loading={loading}
+                      />
+                    )}
                     {activeTab === 'history' && (
                       <div className="space-y-6 text-left animate-fade-in">
+                        {/* Collaboration Audit Trail */}
+                        {activeSession.audit_trail && activeSession.audit_trail.length > 0 && (
+                          <div className="bg-honey-card border border-honey-border rounded-2xl p-5 shadow-sm space-y-4">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-sm font-bold text-honey-text uppercase tracking-wider flex items-center gap-2">
+                                <Sparkles className="h-4.5 w-4.5 text-honey-accent" />
+                                Developer & AI Collaboration Audit Trail
+                              </h3>
+                              <span className="text-[10px] font-mono text-honey-muted">
+                                {activeSession.audit_trail.length} events
+                              </span>
+                            </div>
+                            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                              {activeSession.audit_trail.map((ev: any, idx: number) => (
+                                <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-honey-sidebar/10 border border-honey-border text-xs">
+                                  <div className="flex items-center gap-2.5">
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider ${
+                                      ev.actor === 'DEVELOPER'
+                                        ? 'bg-honey-accent/20 text-honey-accent border border-honey-accent/30'
+                                        : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                    }`}>
+                                      {ev.actor}
+                                    </span>
+                                    <span className="font-semibold text-honey-text">{ev.action}</span>
+                                    <span className="text-[11px] text-honey-muted font-mono truncate max-w-sm">{ev.details}</span>
+                                  </div>
+                                  <span className="text-[10px] text-honey-muted font-mono">{ev.stage}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Autonomous Correction History */}
                         <div className="bg-honey-card border border-honey-border rounded-2xl p-5 shadow-sm">
                           <h3 className="text-sm font-bold text-honey-text uppercase tracking-wider mb-2 flex items-center gap-2">
                             <History className="h-4.5 w-4.5 text-honey-accent" />
@@ -955,9 +1385,6 @@ export default function App() {
                           })}
                         </div>
                       </div>
-                    )}
-                    {activeTab === 'review' && (
-                      <ReviewPanel testResults={activeSession.test_results} status={activeSession.status} />
                     )}
                   </div>
                 </>
